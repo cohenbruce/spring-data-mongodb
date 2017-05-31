@@ -67,7 +67,7 @@ public class QueryDslMongoRepositoryIntegrationTests {
 
 		person = new QPerson("person");
 
-		repository.saveAll(Arrays.asList(oliver, dave, carter));
+		operations.insertAll(Arrays.asList(oliver, dave, carter));
 	}
 
 	@Test // DATAMONGO-1146

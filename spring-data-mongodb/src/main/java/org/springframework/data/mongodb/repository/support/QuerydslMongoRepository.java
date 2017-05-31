@@ -52,8 +52,7 @@ import com.querydsl.mongodb.AbstractMongodbQuery;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-public class QuerydslMongoRepository<T, ID extends Serializable> extends SimpleMongoRepository<T, ID>
-		implements QuerydslPredicateExecutor<T> {
+public class QuerydslMongoRepository<T, ID extends Serializable> implements QuerydslPredicateExecutor<T> {
 
 	private final PathBuilder<T> builder;
 	private final EntityInformation<T, ID> entityInformation;
@@ -80,8 +79,6 @@ public class QuerydslMongoRepository<T, ID extends Serializable> extends SimpleM
 	 */
 	public QuerydslMongoRepository(MongoEntityInformation<T, ID> entityInformation, MongoOperations mongoOperations,
 			EntityPathResolver resolver) {
-
-		super(entityInformation, mongoOperations);
 
 		Assert.notNull(resolver, "EntityPathResolver must not be null!");
 
@@ -176,33 +173,6 @@ public class QuerydslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.support.SimpleMongoRepository#findAll(org.springframework.data.domain.Pageable)
-	 */
-	@Override
-	public Page<T> findAll(Pageable pageable) {
-
-		Assert.notNull(pageable, "Pageable must not be null!");
-
-		AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> query = createQuery();
-
-		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetchResults().getResults(), pageable,
-				() -> createQuery().fetchCount());
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.support.SimpleMongoRepository#findAll(org.springframework.data.domain.Sort)
-	 */
-	@Override
-	public List<T> findAll(Sort sort) {
-
-		Assert.notNull(sort, "Sort must not be null!");
-
-		return applySorting(createQuery(), sort).fetchResults().getResults();
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.QueryDslPredicateExecutor#count(com.mysema.query.types.Predicate)
 	 */
 	@Override
@@ -237,7 +207,7 @@ public class QuerydslMongoRepository<T, ID extends Serializable> extends SimpleM
 
 	/**
 	 * Creates a {@link MongodbQuery}.
-	 * 
+	 *
 	 * @return
 	 */
 	private AbstractMongodbQuery<T, SpringDataMongodbQuery<T>> createQuery() {
