@@ -96,9 +96,9 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 * @see org.springframework.data.repository.core.support.RepositoryFactorySupport#getRepositoryCompositition(org.springframework.data.repository.core.RepositoryMetadata)
 	 */
 	@Override
-	protected RepositoryComposition getRepositoryCompositition(RepositoryMetadata metadata) {
+	protected RepositoryComposition getRepositoryComposition(RepositoryMetadata metadata) {
 
-		RepositoryComposition composition = super.getRepositoryCompositition(metadata);
+		RepositoryComposition composition = super.getRepositoryComposition(metadata);
 
 		RepositoryInformation information = getRepositoryInformation(metadata, composition);
 
