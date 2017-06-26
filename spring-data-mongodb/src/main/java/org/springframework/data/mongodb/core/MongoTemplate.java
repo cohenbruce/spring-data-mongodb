@@ -20,19 +20,8 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 import static org.springframework.data.util.Optionals.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
@@ -900,7 +889,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		ifAllPresent(persistentEntity, persistentEntity.flatMap(PersistentEntity::getVersionProperty), (l, r) -> {
 			ConvertingPropertyAccessor accessor = new ConvertingPropertyAccessor(l.getPropertyAccessor(entity),
 					mongoConverter.getConversionService());
-			accessor.setProperty(r, Optional.of(0));
+			accessor.setProperty(r, 0);
 		});
 	}
 
@@ -997,12 +986,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				entity.getPropertyAccessor(objectToSave), mongoConverter.getConversionService());
 
 		Optional<MongoPersistentProperty> versionProperty = entity.getVersionProperty();
-		Optional<Number> versionNumber = versionProperty.flatMap(it -> convertingAccessor.getProperty(it, Number.class));
+		Optional<Number> versionNumber = versionProperty.map(it -> convertingAccessor.getProperty(it, Number.class));
 
 		return mapIfAllPresent(versionProperty, versionNumber, (property, number) -> {
 
 			// Bump version number
-			convertingAccessor.setProperty(property, Optional.of(number.longValue() + 1));
+			convertingAccessor.setProperty(property, number.longValue() + 1);
 
 			maybeEmitEvent(new BeforeConvertEvent<T>(objectToSave, collectionName));
 			assertUpdateableIdIfNotSet(objectToSave);
@@ -1281,18 +1270,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param object
 	 * @return
 	 */
-	private Pair<String, Optional<Object>> extractIdPropertyAndValue(Object object) {
+	private Pair<String, Object> extractIdPropertyAndValue(Object object) {
 
 		Assert.notNull(object, "Id cannot be extracted from 'null'.");
 
 		Class<?> objectType = object.getClass();
 
 		if (object instanceof Document) {
-			return Pair.of(ID_FIELD, Optional.ofNullable(((Document) object).get(ID_FIELD)));
+			return Pair.of(ID_FIELD, ((Document) object).get(ID_FIELD));
 		}
 
 		Optional<? extends MongoPersistentEntity<?>> entity = mappingContext.getPersistentEntity(objectType);
-		return mapIfAllPresent(entity, entity.flatMap(it -> it.getIdProperty()), //
+		return mapIfAllPresent(entity, entity.flatMap(PersistentEntity::getIdProperty), //
 
 				(l, r) -> Pair.of(r.getFieldName(), l.getPropertyAccessor(object).getProperty(r)))//
 						.orElseThrow(() -> new MappingException("No id property found for object of type " + objectType));
@@ -1306,8 +1295,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	private Query getIdQueryFor(Object object) {
 
-		Pair<String, Optional<Object>> id = extractIdPropertyAndValue(object);
-		return new Query(where(id.getFirst()).is(id.getSecond().orElse(null)));
+		Pair<String, Object> id = extractIdPropertyAndValue(object);
+		return new Query(where(id.getFirst()).is(id.getSecond()));
 	}
 
 	/**
@@ -1321,13 +1310,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notEmpty(objects, "Cannot create Query for empty collection.");
 
 		Iterator<?> it = objects.iterator();
-		Pair<String, Optional<Object>> pair = extractIdPropertyAndValue(it.next());
+		Pair<String, Object> pair = extractIdPropertyAndValue(it.next());
 
 		ArrayList<Object> ids = new ArrayList<Object>(objects.size());
-		ids.add(pair.getSecond().orElse(null));
+		ids.add(pair.getSecond());
 
 		while (it.hasNext()) {
-			ids.add(extractIdPropertyAndValue(it.next()).getSecond().orElse(null));
+			ids.add(extractIdPropertyAndValue(it.next()).getSecond());
 		}
 
 		return new Query(where(pair.getFirst()).in(ids));
@@ -1341,9 +1330,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Optionals.ifAllPresent(persistentEntity, idProperty, (entity, property) -> {
 
-			Optional<Object> propertyValue = entity.getPropertyAccessor(value).getProperty(property);
+			Object propertyValue = entity.getPropertyAccessor(value).getProperty(property);
 
-			if (propertyValue.isPresent()) {
+			if (propertyValue != null) {
 				return;
 			}
 
@@ -2126,9 +2115,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(savedObject.getClass());
 			PersistentPropertyAccessor accessor = entity.getPropertyAccessor(savedObject);
 
-			Optional<Object> value = accessor.getProperty(idProp);
-			if (!value.isPresent()) {
-				new ConvertingPropertyAccessor(accessor, conversionService).setProperty(idProp, Optional.of(id));
+			Object value = accessor.getProperty(idProp);
+			if (value == null) {
+				new ConvertingPropertyAccessor(accessor, conversionService).setProperty(idProp, id);
 			}
 		});
 	}

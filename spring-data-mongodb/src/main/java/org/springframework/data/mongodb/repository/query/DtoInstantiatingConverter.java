@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2016 the original author or authors.
+ * Copyright 2015-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.repository.query;
-
-import java.util.Optional;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.EntityInstantiator;
@@ -45,7 +43,7 @@ class DtoInstantiatingConverter implements Converter<Object, Object> {
 
 	/**
 	 * Creates a new {@link Converter} to instantiate DTOs.
-	 * 
+	 *
 	 * @param dtoType must not be {@literal null}.
 	 * @param context must not be {@literal null}.
 	 * @param instantiators must not be {@literal null}.
@@ -63,7 +61,7 @@ class DtoInstantiatingConverter implements Converter<Object, Object> {
 		this.instantiator = instantiator.getInstantiatorFor(context.getRequiredPersistentEntity(dtoType));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 	 */
@@ -84,7 +82,7 @@ class DtoInstantiatingConverter implements Converter<Object, Object> {
 		Object dto = instantiator.createInstance(targetEntity, new ParameterValueProvider() {
 
 			@Override
-			public Optional<Object> getParameterValue(Parameter parameter) {
+			public Object getParameterValue(Parameter parameter) {
 				return sourceAccessor.getProperty(sourceEntity.getPersistentProperty(parameter.getName().get().toString()).get());
 			}
 		});

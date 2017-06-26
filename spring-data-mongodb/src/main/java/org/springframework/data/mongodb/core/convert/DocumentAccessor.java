@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2016 the original author or authors.
+ * Copyright 2013-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 import org.bson.Document;
@@ -34,9 +33,10 @@ import com.mongodb.DBObject;
  * Wrapper value object for a {@link Document} to be able to access raw values by {@link MongoPersistentProperty}
  * references. The accessors will transparently resolve nested document values that a {@link MongoPersistentProperty}
  * might refer to through a path expression in field names.
- * 
+ *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 class DocumentAccessor {
 
@@ -44,7 +44,7 @@ class DocumentAccessor {
 
 	/**
 	 * Creates a new {@link DocumentAccessor} for the given {@link Document}.
-	 * 
+	 *
 	 * @param document must be a {@link Document} effectively, must not be {@literal null}.
 	 */
 	public DocumentAccessor(Bson document) {
@@ -62,7 +62,7 @@ class DocumentAccessor {
 	 * Puts the given value into the backing {@link Document} based on the coordinates defined through the given
 	 * {@link MongoPersistentProperty}. By default this will be the plain field name. But field names might also consist
 	 * of path traversals so we might need to create intermediate {@link BasicDocument}s.
-	 * 
+	 *
 	 * @param prop must not be {@literal null}.
 	 * @param value
 	 */
@@ -91,20 +91,24 @@ class DocumentAccessor {
 		}
 	}
 
-	public void computeIfAbsent(MongoPersistentProperty prop, Supplier<Optional<Object>> supplier) {
+	public void computeIfAbsent(MongoPersistentProperty prop, Supplier<Object> supplier) {
 
 		if (hasValue(prop)) {
 			return;
 		}
 
-		supplier.get().ifPresent(it -> put(prop, it));
+		Object value = supplier.get();
+
+		if (value != null) {
+			put(prop, value);
+		}
 	}
 
 	/**
 	 * Returns the value the given {@link MongoPersistentProperty} refers to. By default this will be a direct field but
 	 * the method will also transparently resolve nested values the {@link MongoPersistentProperty} might refer to through
 	 * a path expression in the field name metadata.
-	 * 
+	 *
 	 * @param property must not be {@literal null}.
 	 * @return
 	 */
@@ -161,7 +165,7 @@ class DocumentAccessor {
 
 		if (this.document instanceof Document) {
 			source = ((Document) this.document);
-		}else {
+		} else {
 			source = ((DBObject) this.document).toMap();
 		}
 
@@ -182,7 +186,7 @@ class DocumentAccessor {
 
 	/**
 	 * Returns the given source object as map, i.e. {@link Document}s and maps as is or {@literal null} otherwise.
-	 * 
+	 *
 	 * @param source can be {@literal null}.
 	 * @return
 	 */
@@ -207,7 +211,7 @@ class DocumentAccessor {
 	/**
 	 * Returns the {@link Document} which either already exists in the given source under the given key, or creates a new
 	 * nested one, registers it with the source and returns it.
-	 * 
+	 *
 	 * @param key must not be {@literal null} or empty.
 	 * @param source must not be {@literal null}.
 	 * @return
